@@ -2,6 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { ChangeEvent, useState } from "react";
 import { toast } from "sonner";
+import { api } from "../services/api";
 
 interface NewPollProps {
   onPollCreated: (question: string, options: string[]) => void;
@@ -40,11 +41,16 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
       return;
     }
 
-    const newPollId = onPollCreated(question, options); // Retorna o ID da nova enquete
+    const newPollId = onPollCreated(question, options);
     console.log("ID da nova enquete criada:", newPollId);
 
     setQuestion("");
     setOptions(["", ""]);
+
+    api.post("polls", {
+      title: question,
+      options,
+    });
 
     toast.success("Enquete criada com sucesso!");
   }

@@ -3,6 +3,8 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface PollCardProps {
   poll: {
@@ -16,13 +18,19 @@ interface PollCardProps {
 
 export function PollCard({ poll, onPollDeleted }: PollCardProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   function handleOptionSelected(index: number) {
     setSelectedOption(index);
   }
 
+  function handleCloseVoteWindow() {
+    navigate("/", { replace: true }); // Navegar de volta para a página inicial
+  }
+
   function handleVoteSubmit() {
     if (selectedOption === null) {
+      toast.error("Por favor, escolha uma opção para votar.");
       return;
     }
 
@@ -31,8 +39,9 @@ export function PollCard({ poll, onPollDeleted }: PollCardProps) {
     // Exemplo de console.log para demonstração
     console.log("Voto enviado:", poll.options[selectedOption]);
 
-    // Limpa a seleção após o voto ser enviado
-    setSelectedOption(null);
+    handleCloseVoteWindow();
+
+    toast.success("Voto enviado com sucesso!");
   }
 
   function handleDeleteClick() {
@@ -74,6 +83,7 @@ export function PollCard({ poll, onPollDeleted }: PollCardProps) {
 
       <Dialog.Portal>
         <Dialog.Overlay className="inset-0 fixed bg-black/50" />
+
         <Dialog.Content className="fixed overflow-hidden inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-[640px] w-full md:h-[60vh] bg-slate-700 md:rounded-md flex flex-col outline-none">
           <Dialog.Close className="absolute right-0 top-0 bg-slate-800 p-1.5 text-slate-400 hover:text-slate-100">
             <X className="size-5" />
@@ -87,7 +97,7 @@ export function PollCard({ poll, onPollDeleted }: PollCardProps) {
               })}
             </span>
 
-            <h1 className="text-xl leading-6 text-slate-400">
+            <h1 className="text-xl font-bold leading-6 text-slate-300">
               {poll.question}
             </h1>
 
