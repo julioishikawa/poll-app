@@ -1,9 +1,10 @@
-import { ChangeEvent, useState } from "react";
-import logo from "./assets/logo-nlw-expert.svg";
+import { ChangeEvent, useEffect, useState } from "react";
+import logo from "../public/favicon.png";
+import { api } from "./services/api";
 import { NewNoteCard } from "./components/new-note-card";
+import { NoteCard } from "./components/note-card";
 import { NewPollCard } from "./components/new-poll-card";
 import { PollCard } from "./components/poll-card";
-import { NoteCard } from "./components/note-card";
 
 interface Note {
   id: string;
@@ -14,12 +15,17 @@ interface Note {
 interface Poll {
   id: string;
   date: Date;
-  question: string;
-  options: string[];
+  title: string;
+  options: {
+    id: string;
+    title: string;
+    score: number;
+  }[];
 }
 
 export function App() {
   const [search, setSearch] = useState("");
+  const [polls, setPolls] = useState<Poll[]>([]);
   const [notes, setNotes] = useState<Note[]>(() => {
     const notesOnStorage = localStorage.getItem("notes");
 
@@ -30,14 +36,24 @@ export function App() {
     return [];
   });
 
-  const [polls, setPolls] = useState<Poll[]>(() => {
-    const pollsOnStorage = localStorage.getItem("polls");
+  async function fetchPolls() {
+    try {
+      const response = await api.get("/polls");
+      const pollsData = response.data;
 
-    if (pollsOnStorage) {
-      return JSON.parse(pollsOnStorage);
+      // Verifica se a resposta contém os dados das enquetes
+      if (Array.isArray(pollsData)) {
+        setPolls(pollsData);
+      } else {
+        console.error(
+          "Resposta da API não contém dados de enquetes:",
+          pollsData
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao buscar enquetes:", error);
     }
-    return [];
-  });
+  }
 
   function onNoteCreated(content: string) {
     const newNote: Note = {
@@ -61,35 +77,30 @@ export function App() {
     localStorage.setItem("notes", JSON.stringify(updatedNotes));
   }
 
-  function onPollCreated(question: string, options: string[]) {
+  function onPollCreated(title: string, options: string[]) {
     const newPoll: Poll = {
       id: crypto.randomUUID(),
       date: new Date(),
-      question,
-      options,
+      title,
+      options: options.map((option) => ({
+        id: crypto.randomUUID(),
+        title: option,
+        score: 0,
+      })),
     };
 
-    const updatedPolls = [newPoll, ...polls];
-
-    setPolls(updatedPolls);
-
-    localStorage.setItem("polls", JSON.stringify(updatedPolls));
+    setPolls([newPoll, ...polls]);
 
     console.log("Nova enquete criada:");
-    console.log("Pergunta:", question);
+    console.log("Pergunta:", title);
     console.log("Opções:", options);
 
-    return newPoll.id; // Retorna o ID da nova enquete
+    return newPoll.id;
   }
 
-  function onPollDeleted(id: string) {
-    const updatedPolls = polls.filter((poll) => poll.id !== id);
-
-    setPolls(updatedPolls);
-
-    localStorage.setItem("polls", JSON.stringify(updatedPolls));
-
-    console.log("Enquete deletada:", id);
+  function onPollVoted(id: string) {
+    // Lógica para fechar o PollCard e voltar para a tela inicial
+    console.log(`Usuário votou na enquete com ID ${id}`);
   }
 
   function handleSearch(event: ChangeEvent<HTMLInputElement>) {
@@ -102,6 +113,10 @@ export function App() {
           note.content.toLocaleLowerCase().includes(search.toLocaleLowerCase())
         )
       : notes;
+
+  useEffect(() => {
+    fetchPolls();
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl my-12 space-y-6 px-5">
@@ -132,7 +147,11 @@ export function App() {
         <NewPollCard onPollCreated={onPollCreated} />
 
         {polls.map((poll) => (
-          <PollCard key={poll.id} poll={poll} onPollDeleted={onPollDeleted} />
+          <PollCard
+            key={poll.id}
+            poll={poll}
+            onVoteSubmit={() => onPollVoted(poll.id)}
+          />
         ))}
       </div>
     </div>

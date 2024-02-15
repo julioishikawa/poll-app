@@ -2,82 +2,95 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
 interface PollCardProps {
   poll: {
     id: string;
     date: Date;
-    question: string;
-    options: string[];
+    title: string;
+    options: {
+      id: string;
+      title: string;
+      score: number;
+    }[];
   };
-  onPollDeleted: (id: string) => void;
+  onVoteSubmit: (selectedOptionId: string) => void;
 }
 
-export function PollCard({ poll, onPollDeleted }: PollCardProps) {
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const navigate = useNavigate();
+export function PollCard({ poll, onVoteSubmit }: PollCardProps) {
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [pollContent, setPollContent] = useState<string | null>(null);
+  const [pollCreationDistance, setPollCreationDistance] = useState<
+    string | null
+  >(null);
 
-  function handleOptionSelected(index: number) {
-    setSelectedOption(index);
-  }
-
-  function handleCloseVoteWindow() {
-    navigate("/", { replace: true }); // Navegar de volta para a página inicial
+  function handleOptionSelected(optionId: string) {
+    setSelectedOptionId(optionId);
   }
 
   function handleVoteSubmit() {
-    if (selectedOption === null) {
+    if (selectedOptionId === null) {
       toast.error("Por favor, escolha uma opção para votar.");
       return;
     }
 
-    // Envie o voto para o banco de dados (implemente sua lógica de envio aqui)
-
-    // Exemplo de console.log para demonstração
-    console.log("Voto enviado:", poll.options[selectedOption]);
-
-    handleCloseVoteWindow();
-
-    toast.success("Voto enviado com sucesso!");
+    onVoteSubmit(selectedOptionId);
   }
 
-  function handleDeleteClick() {
-    onPollDeleted(poll.id);
-  }
+  useEffect(() => {
+    async function fetchPollById() {
+      try {
+        const response = await api.get(`/polls/${poll.id}`);
+        const pollData = response.data.poll; // Acessando os dados dentro do objeto 'poll'
+
+        setPollContent(pollData.content);
+
+        if (pollData.date) {
+          const distance = formatDistanceToNow(new Date(pollData.date), {
+            locale: ptBR,
+            addSuffix: true,
+          });
+          setPollCreationDistance(distance);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar a enquete:", error);
+      }
+    }
+
+    fetchPollById();
+  }, [poll.id]);
 
   return (
     <Dialog.Root>
       <Dialog.Trigger className="rounded-md text-left bg-slate-800 flex flex-col p-5 gap-3 overflow-hidden relative hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <span className="text-sm font-medium text-slate-300">
-          {formatDistanceToNow(poll.date, {
-            locale: ptBR,
-            addSuffix: true,
-          })}
+          {pollCreationDistance}
         </span>
 
-        <h2 className="text-base leading-6 text-slate-300">{poll.question}</h2>
+        <h2 className="text-base leading-6 text-slate-300">{poll.title}</h2>
 
-        {poll.options.map((option, index) => (
-          <button
-            key={index}
-            className={`min-h-5 text-sm text-slate-400 hover:underline ${
-              selectedOption === index ? "font-bold" : ""
-            }`}
-            style={{
-              maxWidth: "304px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "pre-wrap",
-              wordWrap: "break-word",
-            }}
-            onClick={() => handleOptionSelected(index)}
-          >
-            {option}
-          </button>
-        ))}
+        {poll.options &&
+          poll.options.map((option) => (
+            <button
+              key={option.id}
+              className={`min-h-5 text-sm text-slate-400 hover:underline ${
+                selectedOptionId === option.id ? "font-bold" : ""
+              }`}
+              style={{
+                maxWidth: "304px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "pre-wrap",
+                wordWrap: "break-word",
+              }}
+              onClick={() => handleOptionSelected(option.id)}
+            >
+              {option.title}
+            </button>
+          ))}
         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-black/0 pointer-events-none" />
       </Dialog.Trigger>
 
@@ -90,49 +103,52 @@ export function PollCard({ poll, onPollDeleted }: PollCardProps) {
           </Dialog.Close>
 
           <div className="flex flex-1 flex-col gap-3 p-5">
-            <span className="text-sm font-medium text-slate-300">
-              {formatDistanceToNow(poll.date, {
-                locale: ptBR,
-                addSuffix: true,
-              })}
-            </span>
+            {pollCreationDistance && (
+              <span className="text-sm font-medium text-slate-300">
+                {pollCreationDistance}
+              </span>
+            )}
 
             <h1 className="text-xl font-bold leading-6 text-slate-300">
-              {poll.question}
+              {poll.title}
             </h1>
+
+            {/* Renderize o conteúdo da enquete aqui */}
+            <p className="text-slate-400">{pollContent}</p>
 
             <div
               className="overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent"
               style={{ maxHeight: "340px" }}
             >
               <p>Opções</p>
-              {poll.options.map((option, index) => (
-                <div
-                  key={index}
-                  className="flex items-center p-2 hover:bg-slate-800 rounded"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleOptionSelected(index)}
-                >
-                  <span
-                    className="w-full text-sm text-slate-400 "
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "pre-wrap",
-                      wordWrap: "break-word",
-                    }}
+              {poll.options &&
+                poll.options.map((option) => (
+                  <div
+                    key={option.id}
+                    className="flex items-center p-2 hover:bg-slate-800 rounded"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleOptionSelected(option.id)}
                   >
-                    {option}
-                  </span>
-                  <input
-                    type="radio"
-                    name="vote"
-                    className="w-4 h-4"
-                    checked={selectedOption === index}
-                    onChange={() => handleOptionSelected(index)}
-                  />
-                </div>
-              ))}
+                    <span
+                      className="w-full text-sm text-slate-400 "
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "pre-wrap",
+                        wordWrap: "break-word",
+                      }}
+                    >
+                      {option.title}
+                    </span>
+                    <input
+                      type="radio"
+                      name="vote"
+                      className="w-4 h-4"
+                      checked={selectedOptionId === option.id}
+                      onChange={() => handleOptionSelected(option.id)}
+                    />
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -142,18 +158,6 @@ export function PollCard({ poll, onPollDeleted }: PollCardProps) {
             className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
           >
             Enviar voto
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDeleteClick}
-            className="w-full bg-slate-800 py-4 text-center text-sm text-slate-300 outline-none font-medium group"
-          >
-            Deseja{" "}
-            <span className="text-red-400 group-hover:underline">
-              apagar essa enquete
-            </span>
-            ?
           </button>
         </Dialog.Content>
       </Dialog.Portal>
