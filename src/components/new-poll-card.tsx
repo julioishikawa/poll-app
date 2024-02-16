@@ -41,8 +41,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
       return;
     }
 
-    const newPollId = onPollCreated(question, options);
-    console.log("ID da nova enquete criada:", newPollId);
+    onPollCreated(question, options);
 
     setQuestion("");
     setOptions(["", ""]);

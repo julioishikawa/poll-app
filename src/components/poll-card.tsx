@@ -17,10 +17,9 @@ interface PollCardProps {
       score: number;
     }[];
   };
-  onVoteSubmit: (selectedOptionId: string) => void;
 }
 
-export function PollCard({ poll, onVoteSubmit }: PollCardProps) {
+export function PollCard({ poll }: PollCardProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [pollContent, setPollContent] = useState<string | null>(null);
   const [pollCreationDistance, setPollCreationDistance] = useState<
@@ -31,20 +30,33 @@ export function PollCard({ poll, onVoteSubmit }: PollCardProps) {
     setSelectedOptionId(optionId);
   }
 
+  async function handleDeletePoll() {
+    try {
+      await api.delete(`/polls/${poll.id}`);
+      toast.success("Enquete excluída com sucesso.");
+      window.location.reload();
+      // Você pode adicionar lógica adicional após excluir a enquete, se necessário
+    } catch (error) {
+      console.error("Erro ao excluir a enquete:", error);
+      toast.error(
+        "Erro ao excluir a enquete. Por favor, tente novamente mais tarde."
+      );
+    }
+  }
+
   function handleVoteSubmit() {
     if (selectedOptionId === null) {
       toast.error("Por favor, escolha uma opção para votar.");
       return;
     }
-
-    onVoteSubmit(selectedOptionId);
+    // Adicione aqui a lógica para enviar o voto
   }
 
   useEffect(() => {
     async function fetchPollById() {
       try {
         const response = await api.get(`/polls/${poll.id}`);
-        const pollData = response.data.poll; // Acessando os dados dentro do objeto 'poll'
+        const pollData = response.data.poll;
 
         setPollContent(pollData.content);
 
@@ -113,7 +125,6 @@ export function PollCard({ poll, onVoteSubmit }: PollCardProps) {
               {poll.title}
             </h1>
 
-            {/* Renderize o conteúdo da enquete aqui */}
             <p className="text-slate-400">{pollContent}</p>
 
             <div
@@ -125,7 +136,7 @@ export function PollCard({ poll, onVoteSubmit }: PollCardProps) {
                 poll.options.map((option) => (
                   <div
                     key={option.id}
-                    className="flex items-center p-2 hover:bg-slate-800 rounded"
+                    className="flex items-center p-2 bg-slate-800 my-1 hover:bg-slate-900 rounded"
                     style={{ cursor: "pointer" }}
                     onClick={() => handleOptionSelected(option.id)}
                   >
@@ -158,6 +169,13 @@ export function PollCard({ poll, onVoteSubmit }: PollCardProps) {
             className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
           >
             Enviar voto
+          </button>
+
+          <button
+            onClick={handleDeletePoll}
+            className="w-full py-4 text-center text-sm text-white outline-none font-medium hover:bg-red-700"
+          >
+            Excluir Enquete
           </button>
         </Dialog.Content>
       </Dialog.Portal>
