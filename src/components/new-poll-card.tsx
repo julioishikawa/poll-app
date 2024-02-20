@@ -75,7 +75,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
 
           <form className=" flex flex-1 flex-col h-full">
             <div className="flex flex-col gap-3 p-5">
-              <label>Pergunta</label>
+              <h2>Pergunta</h2>
               <input
                 type="text"
                 className="text-sm leading-6 p-1.5 text-slate-400 bg-slate-800 resize-none outline-none rounded-md"
@@ -84,8 +84,8 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
               />
             </div>
 
+            <h2 className="px-5 pb-3">Opções</h2>
             <div className="flex flex-1 flex-col gap-4 px-5 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
-              <label>Opções</label>
               {options.map((option, index) => (
                 <div key={index} className="flex space-x-4">
                   <input
