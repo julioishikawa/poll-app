@@ -5,6 +5,7 @@ import { NewNoteCard } from "./components/new-note-card";
 import { NoteCard } from "./components/note-card";
 import { NewPollCard } from "./components/new-poll-card";
 import { PollCard } from "./components/poll-card";
+import { PollCardResults } from "./components/poll-card-results";
 
 interface Note {
   id: string;
@@ -26,6 +27,9 @@ interface Poll {
 export function App() {
   const [search, setSearch] = useState("");
   const [polls, setPolls] = useState<Poll[]>([]);
+  const [votedPolls, setVotedPolls] = useState<string[]>([]);
+
+  const [showPollResults, setShowPollResults] = useState<boolean>(false);
   const [notes, setNotes] = useState<Note[]>(() => {
     const notesOnStorage = localStorage.getItem("notes");
 
@@ -35,6 +39,13 @@ export function App() {
 
     return [];
   });
+
+  const filteredNotes =
+    search !== ""
+      ? notes.filter((note) =>
+          note.content.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+        )
+      : notes;
 
   function onNoteCreated(content: string) {
     const newNote: Note = {
@@ -62,19 +73,42 @@ export function App() {
     setSearch(event.target.value);
   }
 
-  const filteredNotes =
-    search !== ""
-      ? notes.filter((note) =>
-          note.content.toLocaleLowerCase().includes(search.toLocaleLowerCase())
-        )
-      : notes;
+  function handlePollCreated(title: string, options: string[]) {
+    const newPoll: Poll = {
+      id: crypto.randomUUID(),
+      date: new Date(),
+      title,
+      options: options.map((option, index) => ({
+        id: index.toString(),
+        title: option,
+        score: 0,
+      })),
+    };
+
+    setPolls((prevPolls) => [newPoll, ...prevPolls]);
+    window.location.reload();
+  }
+
+  function handleVoteSubmitted(pollId: string) {
+    const updatedVotedPolls = [...votedPolls, pollId];
+    setVotedPolls(updatedVotedPolls);
+    localStorage.setItem("votedPolls", JSON.stringify(updatedVotedPolls));
+    setShowPollResults(true);
+  }
+
+  async function checkVotedPolls() {
+    const votedPollsFromStorage = localStorage.getItem("votedPolls");
+    if (votedPollsFromStorage) {
+      setVotedPolls(JSON.parse(votedPollsFromStorage));
+      setShowPollResults(true);
+    }
+  }
 
   async function fetchPolls() {
     try {
       const response = await api.get("/polls");
       const pollsData = response.data;
 
-      // Verifica se a resposta contém os dados das enquetes
       if (Array.isArray(pollsData)) {
         setPolls(pollsData);
       } else {
@@ -88,24 +122,9 @@ export function App() {
     }
   }
 
-  function handlePollCreated(title: string, options: string[]) {
-    const newPoll: Poll = {
-      id: crypto.randomUUID(),
-      date: new Date(),
-      title,
-      options: options.map((option, index) => ({
-        id: index.toString(), // You can generate the id as you need
-        title: option,
-        score: 0, // Assuming initial score is 0
-      })),
-    };
-
-    setPolls((prevPolls) => [newPoll, ...prevPolls]);
-    window.location.reload();
-  }
-
   useEffect(() => {
     fetchPolls();
+    checkVotedPolls();
   }, []);
 
   return (
@@ -137,7 +156,20 @@ export function App() {
         <NewPollCard onPollCreated={handlePollCreated} />
 
         {polls.map((poll) => (
-          <PollCard key={poll.id} poll={poll} />
+          <div
+            className="grid grid-cols-1  gap-6 auto-rows-[250px]"
+            key={poll.id}
+          >
+            {showPollResults && votedPolls.includes(poll.id) ? (
+              <PollCardResults key={poll.id} poll={poll} />
+            ) : (
+              <PollCard
+                key={poll.id}
+                poll={poll}
+                onVoteSubmitted={() => handleVoteSubmitted(poll.id)}
+              />
+            )}
+          </div>
         ))}
       </div>
     </div>

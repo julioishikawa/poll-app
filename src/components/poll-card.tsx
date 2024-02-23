@@ -14,12 +14,12 @@ interface PollCardProps {
     options: {
       id: string;
       title: string;
-      score: number;
     }[];
   };
+  onVoteSubmitted: (id: string) => void;
 }
 
-export function PollCard({ poll }: PollCardProps) {
+export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string>("");
   const [pollCreationDistance, setPollCreationDistance] = useState<string>("");
   const [voteSubmitted, setVoteSubmitted] = useState<boolean>(false);
@@ -36,29 +36,6 @@ export function PollCard({ poll }: PollCardProps) {
     }
   }
 
-  function getButtonText() {
-    if (isSubmitting) {
-      return "Enviando voto...";
-    } else if (voteSubmitted) {
-      return "Voto enviado";
-    } else {
-      return "Enviar voto";
-    }
-  }
-
-  async function handleDeletePoll() {
-    try {
-      await api.delete(`/polls/${poll.id}`);
-      toast.success("Enquete excluída com sucesso.");
-      window.location.reload();
-    } catch (error) {
-      console.error("Erro ao excluir a enquete:", error);
-      toast.error(
-        "Erro ao excluir a enquete. Por favor, tente novamente mais tarde."
-      );
-    }
-  }
-
   async function handleVoteSubmit() {
     if (!selectedOptionId) {
       toast.error("Você precisa escolher uma opção para votar na enquete.");
@@ -72,18 +49,20 @@ export function PollCard({ poll }: PollCardProps) {
         pollOptionId: selectedOptionId,
       });
 
-      toast.success("Voto enviado com sucesso.");
-      setVoteSubmitted(true);
-
       const setCookieHeader = response.headers["set-cookie"];
 
       if (typeof setCookieHeader === "string") {
         document.cookie = setCookieHeader;
       }
+
+      toast.success("Voto enviado com sucesso.");
+      setVoteSubmitted(true);
+      onVoteSubmitted(poll.id);
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
         toast.error("Você já votou nesta enquete.");
       } else {
+        console.error("Erro ao enviar o voto:", error);
         toast.error(
           "Erro ao enviar o voto. Por favor, tente novamente mais tarde."
         );
@@ -196,21 +175,24 @@ export function PollCard({ poll }: PollCardProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleVoteSubmit}
-            disabled={voteSubmitted || isSubmitting}
-            className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
-          >
-            {getButtonText()}
-          </button>
-
-          <button
-            onClick={handleDeletePoll}
-            className="w-full py-4 text-center text-sm text-white outline-none font-medium hover:bg-red-700"
-          >
-            Excluir Enquete
-          </button>
+          {isSubmitting ? (
+            <button
+              type="button"
+              disabled
+              className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500 cursor-not-allowed"
+            >
+              Enviando voto...
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleVoteSubmit}
+              disabled={voteSubmitted}
+              className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
+            >
+              Enviar voto
+            </button>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
