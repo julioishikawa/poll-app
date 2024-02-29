@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 interface PollCardProps {
   poll: {
     id: string;
-    date: Date;
+    created_at: Date;
     title: string;
     options: {
       id: string;
@@ -56,7 +56,6 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
       }
 
       toast.success("Voto enviado com sucesso.");
-      setVoteSubmitted(true);
       onVoteSubmitted(poll.id);
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
@@ -101,7 +100,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
           {pollCreationDistance}
         </span>
 
-        <div className="max-w-[300px]">
+        <div className="max-w-[270px]">
           <h2 className="text-base leading-6 text-slate-300 truncate">
             {poll.title}
           </h2>
@@ -147,10 +146,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
 
             <div>
               <h2 className="mb-3">Opções</h2>
-              <div
-                className="flex flex-1 flex-col pr-2 gap-3 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent"
-                style={{ maxHeight: "340px" }}
-              >
+              <div className="max-h-[340px] flex flex-1 flex-col pr-2 gap-3 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
                 {poll.options &&
                   poll.options.map((option) => (
                     <div

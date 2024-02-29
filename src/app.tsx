@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import logo from "./assets/logo-nlw-expert.svg";
 import { api } from "./services/api";
 import { NewNoteCard } from "./components/new-note-card";
@@ -15,7 +15,7 @@ interface Note {
 
 interface Poll {
   id: string;
-  date: Date;
+  created_at: Date;
   title: string;
   options: {
     id: string;
@@ -29,7 +29,9 @@ export function App() {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [votedPolls, setVotedPolls] = useState<string[]>([]);
 
-  const [showPollResults, setShowPollResults] = useState<boolean>(false);
+  const [pollResultsVisible, setPollResultsVisible] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [notes, setNotes] = useState<Note[]>(() => {
     const notesOnStorage = localStorage.getItem("notes");
 
@@ -76,7 +78,7 @@ export function App() {
   function handlePollCreated(title: string, options: string[]) {
     const newPoll: Poll = {
       id: crypto.randomUUID(),
-      date: new Date(),
+      created_at: new Date(),
       title,
       options: options.map((option, index) => ({
         id: index.toString(),
@@ -93,29 +95,37 @@ export function App() {
     const updatedVotedPolls = [...votedPolls, pollId];
     setVotedPolls(updatedVotedPolls);
     localStorage.setItem("votedPolls", JSON.stringify(updatedVotedPolls));
-    setShowPollResults(true);
+    setPollResultsVisible({ ...pollResultsVisible, [pollId]: true }); // Define os resultados como visíveis para esta enquete
   }
 
-  async function checkVotedPolls() {
-    const votedPollsFromStorage = localStorage.getItem("votedPolls");
-    if (votedPollsFromStorage) {
-      setVotedPolls(JSON.parse(votedPollsFromStorage));
-      setShowPollResults(true);
-    }
+  function handleChangeVote(pollId: string) {
+    setPollResultsVisible({ ...pollResultsVisible, [pollId]: false });
   }
 
   async function fetchPolls() {
     try {
       const response = await api.get("/polls");
-      const pollsData = response.data;
+      const pollsData: Poll[] = response.data;
+      console.log("Dados da API:", pollsData);
 
-      if (Array.isArray(pollsData)) {
-        setPolls(pollsData);
-      } else {
-        console.error(
-          "Resposta da API não contém dados de enquetes:",
-          pollsData
-        );
+      // Ordena as enquetes por ordem de criação (da mais recente para a mais antiga)
+      pollsData.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setPolls(pollsData);
+
+      const votedPollsFromStorage = localStorage.getItem("votedPolls");
+      if (votedPollsFromStorage) {
+        const votedPolls: string[] = JSON.parse(votedPollsFromStorage);
+        setVotedPolls(votedPolls);
+
+        const updatedPollResultsVisible = { ...pollResultsVisible };
+        votedPolls.forEach((votedPollId) => {
+          updatedPollResultsVisible[votedPollId] = true; // Define como verdadeiro para todas as enquetes votadas
+        });
+        setPollResultsVisible(updatedPollResultsVisible);
       }
     } catch (error) {
       console.error("Erro ao buscar enquetes:", error);
@@ -124,7 +134,6 @@ export function App() {
 
   useEffect(() => {
     fetchPolls();
-    checkVotedPolls();
   }, []);
 
   return (
@@ -157,14 +166,16 @@ export function App() {
 
         {polls.map((poll) => (
           <div
-            className="grid grid-cols-1  gap-6 auto-rows-[250px]"
+            className="grid grid-cols-1 gap-6 auto-rows-[250px]"
             key={poll.id}
           >
-            {showPollResults && votedPolls.includes(poll.id) ? (
-              <PollCardResults key={poll.id} poll={poll} />
+            {pollResultsVisible[poll.id] ? ( // Verifica se os resultados devem ser visíveis para esta enquete
+              <PollCardResults
+                poll={poll}
+                onChangeVote={() => handleChangeVote(poll.id)}
+              />
             ) : (
               <PollCard
-                key={poll.id}
                 poll={poll}
                 onVoteSubmitted={() => handleVoteSubmitted(poll.id)}
               />

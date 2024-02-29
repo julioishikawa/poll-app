@@ -1,109 +1,74 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import * as Dialog from "@radix-ui/react-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { X } from "lucide-react";
-import { useWebSocket } from "../hooks/web-socket-provider";
+import { toast } from "sonner";
+
+interface PollOption {
+  id: string;
+  title: string;
+  score: number;
+}
 
 interface PollResultsProps {
   poll: {
     id: string;
-    date: Date;
+    created_at: Date;
     title: string;
-    options: {
-      id: string;
-      title: string;
-    }[];
+    options: PollOption[];
   };
+  onChangeVote: (pollId: string) => void;
 }
 
-const MAX_RECONNECTION_ATTEMPTS = 5; // Máximo de tentativas de reconexão
-const RECONNECT_INTERVAL = 1000; // Intervalo inicial de reconexão em milissegundos
-
-export function PollCardResults({ poll }: PollResultsProps) {
+export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
   const [pollData, setPollData] = useState<any>(null);
   const [pollCreationDistance, setPollCreationDistance] = useState<string>("");
-  const [results, setResults] = useState<
-    { pollOptionId: string; votes: number }[]
-  >([]);
-  const wsURL = useWebSocket(poll.id);
-  const [reconnectionAttempts, setReconnectionAttempts] = useState<number>(0);
 
-  const connectWebSocket = useCallback(() => {
-    const ws = new WebSocket(wsURL);
+  async function handleDelete() {
+    const confirmDelete = window.confirm(
+      "Tem certeza que deseja deletar esta enquete?"
+    );
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-      setReconnectionAttempts(0); // Zerar o número de tentativas de reconexão após a conexão bem-sucedida
-    };
+    if (!confirmDelete) {
+      return;
+    }
 
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      console.log("Received WebSocket message", message);
-      setResults((prevResults) => {
-        const updatedResults = prevResults.map((result) => {
-          if (result.pollOptionId === message.pollOptionId) {
-            return {
-              ...result,
-              votes: message.votes,
-            };
-          }
-          return result;
-        });
-        return updatedResults;
-      });
-    };
+    await api.delete(`/polls/${poll.id}`);
+    toast.success("Enquete deletada com sucesso.");
+    window.location.reload();
+  }
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      // Tentar reconectar após um intervalo de tempo determinado
-      if (reconnectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
-        const reconnectTimeout =
-          Math.pow(2, reconnectionAttempts) * RECONNECT_INTERVAL;
-        setTimeout(connectWebSocket, reconnectTimeout);
-        setReconnectionAttempts((prevAttempts) => prevAttempts + 1);
-      } else {
-        console.error("Reached maximum reconnection attempts");
-      }
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket connection closed, reopening...");
-      // Tentar reconectar imediatamente
-      connectWebSocket();
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [wsURL, reconnectionAttempts]);
+  function handleChangeVote(pollId: string) {
+    if (onChangeVote && pollId) {
+      onChangeVote(pollId);
+    } else {
+      toast.error("ID da enquete inválido");
+    }
+  }
 
   useEffect(() => {
-    async function fetchPollData() {
+    const fetchPollData = async () => {
       try {
         const response = await api.get(`/polls/${poll.id}`);
-        const pollData = response.data.poll;
+        const { poll: fetchedPollData } = response.data;
 
-        if (pollData.date) {
-          const distance = formatDistanceToNow(new Date(pollData.date), {
+        if (fetchedPollData.date) {
+          const distance = formatDistanceToNow(new Date(fetchedPollData.date), {
             locale: ptBR,
             addSuffix: true,
           });
           setPollCreationDistance(distance);
-          setPollData(pollData);
+          setPollData(fetchedPollData);
         }
       } catch (error) {
         console.error("Erro ao buscar a enquete:", error);
       }
-    }
+    };
 
     fetchPollData();
   }, [poll.id]);
-
-  useEffect(() => {
-    connectWebSocket();
-  }, [connectWebSocket]);
 
   return (
     <div>
@@ -113,26 +78,31 @@ export function PollCardResults({ poll }: PollResultsProps) {
             {pollCreationDistance}
           </span>
 
-          <div className="max-w-[300px]">
+          <div className="max-w-[270px]">
             <h2 className="text-base leading-6 text-slate-300 truncate">
               {poll.title}
             </h2>
           </div>
-
-          {poll.options &&
-            poll.options.map((option) => (
-              <span
+          {pollData &&
+            pollData.options &&
+            pollData.options.map((option: PollOption) => (
+              <div
                 key={option.id}
-                className={`min-h-5 max-w-full text-left text-sm text-slate-400 hover:underline truncate ${
-                  option.id ? "font-bold" : ""
-                }`}
+                className={`min-h-5 w-full gap-3 text-left text-sm text-slate-400 hover:underline flex justify-between items-center`}
                 tabIndex={-1}
               >
-                {option.title}:{" "}
-                {results.find((result) => result.pollOptionId === option.id)
-                  ?.votes ?? 0}{" "}
-                votos
-              </span>
+                <span className="w-48 inline-block truncate">
+                  {option.title}{" "}
+                </span>
+
+                <span
+                  className={`min-w-[60px] ${
+                    option.score > 0 ? "font-bold" : ""
+                  }`}
+                >
+                  {option.score} votos
+                </span>
+              </div>
             ))}
 
           <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-black/0 pointer-events-none" />
@@ -153,23 +123,50 @@ export function PollCardResults({ poll }: PollResultsProps) {
                 </span>
               )}
 
-              <div className="max-w-[500px]">
+              <div>
                 <h1 className="text-xl font-bold leading-6 text-slate-300 break-words">
                   Resultados da Enquete: {pollData?.title}
                 </h1>
               </div>
 
               <div>
-                <ul>
-                  {poll.options.map((option, index) => (
-                    <li key={index}>
-                      {option.title}:{" "}
-                      {results.find(
-                        (result) => result.pollOptionId === option.id
-                      )?.votes ?? 0}{" "}
-                      votos
-                    </li>
-                  ))}
+                <ul className="flex flex-col gap-3">
+                  {pollData &&
+                    pollData.options &&
+                    pollData.options.map(
+                      (option: PollOption, index: number) => (
+                        <li
+                          className={`w-full gap-5 text-left flex justify-between items-center`}
+                          key={index}
+                        >
+                          <span className="w-full inline-block truncate">
+                            {option.title}
+                          </span>
+
+                          <span
+                            className={`min-w-[60px] ${
+                              option.score > 0 ? "font-bold" : ""
+                            }`}
+                          >
+                            {option.score} votos
+                          </span>
+                        </li>
+                      )
+                    )}
+                  <div className="flex justify-between mt-4">
+                    <button
+                      className="px-4 py-2 bg-lime-500 text-lime-100 font-medium rounded hover:bg-lime-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lime-500"
+                      onClick={() => handleChangeVote(poll.id)}
+                    >
+                      Trocar Voto
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-red-500 text-red-100 font-medium rounded hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+                      onClick={handleDelete}
+                    >
+                      Deletar Enquete
+                    </button>
+                  </div>
                 </ul>
               </div>
             </div>
