@@ -19,6 +19,9 @@ interface PollCardProps {
   onVoteSubmitted: (id: string) => void;
 }
 
+const SpeechRecognitionAPI =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
 export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string>("");
   const [pollCreationDistance, setPollCreationDistance] = useState<string>("");
@@ -26,6 +29,9 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [previousVotedOptionId, setPreviousVotedOptionId] =
     useState<string>("");
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [speechRecognition, setSpeechRecognition] =
+    useState<SpeechRecognition | null>(null);
 
   function handleOptionSelected(optionId: string) {
     setSelectedOptionId(optionId);
@@ -72,6 +78,53 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
     }
   }
 
+  function handleStartRecording() {
+    const isSpeechRecognitionAPIAvailable =
+      "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
+
+    if (!isSpeechRecognitionAPIAvailable) {
+      alert("Infelizmente seu navegador não suporta a API de gravação!");
+      return;
+    }
+
+    setIsRecording(true);
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      const lastResultIndex = event.results.length - 1;
+      const transcription =
+        event.results[lastResultIndex][0].transcript.toLowerCase();
+
+      const option = poll.options.find((option) =>
+        transcription.includes(option.title.toLowerCase())
+      );
+
+      if (option) {
+        handleOptionSelected(option.id);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error(event);
+    };
+
+    recognition.start();
+    setSpeechRecognition(recognition);
+  }
+
+  function handleStopRecording() {
+    setIsRecording(false);
+
+    if (speechRecognition) {
+      speechRecognition.stop();
+    }
+  }
+
   useEffect(() => {
     async function fetchPollDistanceById() {
       try {
@@ -93,8 +146,18 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
     fetchPollDistanceById();
   }, [poll.id]);
 
+  useEffect(() => {
+    const cleanup = () => {
+      if (isRecording && speechRecognition !== null) {
+        speechRecognition.abort();
+      }
+    };
+
+    return cleanup;
+  }, [isRecording, speechRecognition]);
+
   return (
-    <Dialog.Root>
+    <Dialog.Root onOpenChange={(open) => !open && handleStopRecording()}>
       <Dialog.Trigger className="rounded-md bg-slate-800 flex flex-col p-5 gap-3 overflow-hidden relative hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <span className="text-sm font-medium text-slate-300">
           {pollCreationDistance}
@@ -170,6 +233,25 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
               </div>
             </div>
           </div>
+
+          {isRecording ? (
+            <button
+              type="button"
+              onClick={handleStopRecording}
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 py-4 text-center text-sm text-slate-300 outline-none font-medium hover:text-slate-100"
+            >
+              <div className="size-3 rounded-full bg-red-500 animate-pulse" />
+              Gravando! (clique p/ interromper)
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStartRecording}
+              className="w-full  py-4 text-center text-sm  outline-none font-medium hover:text-lime-500"
+            >
+              Iniciar gravação de voz para marcar opção
+            </button>
+          )}
 
           {isSubmitting ? (
             <button

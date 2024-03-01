@@ -95,7 +95,7 @@ export function App() {
     const updatedVotedPolls = [...votedPolls, pollId];
     setVotedPolls(updatedVotedPolls);
     localStorage.setItem("votedPolls", JSON.stringify(updatedVotedPolls));
-    setPollResultsVisible({ ...pollResultsVisible, [pollId]: true }); // Define os resultados como visíveis para esta enquete
+    setPollResultsVisible({ ...pollResultsVisible, [pollId]: true });
   }
 
   function handleChangeVote(pollId: string) {
@@ -106,9 +106,7 @@ export function App() {
     try {
       const response = await api.get("/polls");
       const pollsData: Poll[] = response.data;
-      console.log("Dados da API:", pollsData);
 
-      // Ordena as enquetes por ordem de criação (da mais recente para a mais antiga)
       pollsData.sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

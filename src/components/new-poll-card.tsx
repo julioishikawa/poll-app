@@ -1,8 +1,11 @@
+import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
-import { ChangeEvent, useState } from "react";
+import { X, Mic, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../services/api";
+
+const SpeechRecognitionAPI =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
 interface NewPollProps {
   onPollCreated: (question: string, options: string[]) => void;
@@ -11,18 +14,111 @@ interface NewPollProps {
 export function NewPollCard({ onPollCreated }: NewPollProps) {
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
+  const [isRecordingTitle, setIsRecordingTitle] = useState<boolean>(false);
+  const [optionIndexRecording, setOptionIndexRecording] = useState<number>(-1);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(
+    null
+  );
 
-  function handleQuestionChanged(event: ChangeEvent<HTMLInputElement>) {
-    setQuestion(event.target.value);
-  }
+  useEffect(() => {
+    return () => {
+      // Limpa a gravação quando o componente é desmontado
+      if (recognition !== null) {
+        recognition.stop();
+      }
+    };
+  }, [recognition]);
 
-  function handleOptionChanged(
-    index: number,
-    event: ChangeEvent<HTMLInputElement>
-  ) {
-    const newOptions = [...options];
-    newOptions[index] = event.target.value;
-    setOptions(newOptions);
+  const handleTitleRecognitionStart = () => {
+    // Armazenar o valor atual do input
+    const currentQuestion = question + " "; // Adiciona um espaço para separar o texto anterior do novo
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      const transcription = Array.from(event.results).reduce((text, result) => {
+        return text.concat(result[0].transcript);
+      }, "");
+
+      const newQuestion = currentQuestion + transcription; // Adicionar ao valor armazenado
+      setQuestion(newQuestion);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Erro no reconhecimento de voz:", event.error);
+    };
+
+    setIsRecordingTitle(true);
+    setRecognition(recognition);
+    recognition.start();
+  };
+
+  const handleOptionRecognitionStart = (index: number) => {
+    // Armazenar o valor atual da opção
+    const currentOption = options[index] + " "; // Adiciona um espaço para separar o texto anterior do novo
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      const transcription = Array.from(event.results).reduce((text, result) => {
+        return text.concat(result[0].transcript);
+      }, "");
+
+      const newOptions = [...options];
+      newOptions[index] = currentOption + transcription; // Adicionar ao valor armazenado
+      setOptions(newOptions);
+    };
+
+    setOptionIndexRecording(index);
+    setRecognition(recognition);
+    recognition.start();
+  };
+
+  const handleTitleRecognitionToggle = () => {
+    if (isRecordingTitle) {
+      setIsRecordingTitle(false);
+      recognition?.abort();
+      setOptionIndexRecording(-1); // Resetar o índice de gravação de opção
+    } else {
+      // Cancelar a gravação da opção se estiver ocorrendo
+      if (optionIndexRecording !== -1) {
+        recognition?.abort();
+        setOptionIndexRecording(-1);
+      }
+      handleTitleRecognitionStart();
+    }
+  };
+
+  const handleOptionRecognitionToggle = (index: number) => {
+    if (optionIndexRecording === index) {
+      recognition?.abort();
+      setOptionIndexRecording(-1); // Resetar o índice de gravação de opção
+    } else {
+      // Cancelar a gravação do título se estiver ocorrendo
+      if (isRecordingTitle) {
+        setIsRecordingTitle(false);
+        recognition?.abort();
+      }
+      handleOptionRecognitionStart(index);
+    }
+  };
+
+  function handleStopRecording() {
+    setIsRecordingTitle(false);
+
+    if (recognition) {
+      recognition.stop();
+      setRecognition(null);
+      setOptionIndexRecording(-1);
+    }
   }
 
   function handleAddOption() {
@@ -30,9 +126,18 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
   }
 
   function handleRemoveOption(index: number) {
-    const newOptions = [...options];
-    newOptions.splice(index, 1);
-    setOptions(newOptions);
+    // Verificar se a opção está sendo gravada
+    if (index === optionIndexRecording) {
+      // Exibir toast de aviso
+      toast.error(
+        "Não é possível excluir a opção enquanto estiver sendo gravada por voz."
+      );
+    } else {
+      // Remover a opção
+      const newOptions = [...options];
+      newOptions.splice(index, 1);
+      setOptions(newOptions);
+    }
   }
 
   function handleSavePoll() {
@@ -55,7 +160,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
   }
 
   return (
-    <Dialog.Root>
+    <Dialog.Root onOpenChange={(open) => !open && handleStopRecording()}>
       <Dialog.Trigger className="rounded-md flex flex-col gap-3 text-left bg-slate-700 p-5 hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <button className="text-sm font-medium text-slate-200">
           Adicionar enquete
@@ -76,12 +181,29 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
           <form className=" flex flex-1 flex-col h-full">
             <div className="flex flex-col gap-3 p-5">
               <h2>Pergunta</h2>
-              <input
-                type="text"
-                className="text-sm leading-6 p-1.5 text-slate-400 bg-slate-800 resize-none outline-none rounded-md"
-                value={question}
-                onChange={handleQuestionChanged}
-              />
+
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  className="w-full text-sm leading-6 p-1.5 text-slate-400 bg-slate-800 resize-none outline-none rounded-md"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  readOnly={isRecordingTitle}
+                />
+                <button
+                  type="button"
+                  onClick={handleTitleRecognitionToggle}
+                  className={`text-sm text-lime-400 font-medium hover:text-lime-300 ${
+                    isRecordingTitle ? "text-red-600" : ""
+                  }`}
+                >
+                  {isRecordingTitle ? (
+                    <div className="size-4 rounded-full bg-red-500 animate-pulse" />
+                  ) : (
+                    <Mic size={16} />
+                  )}
+                </button>
+              </div>
             </div>
 
             <h2 className="px-5 pb-3">Opções</h2>
@@ -93,14 +215,32 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                     className="w-full text-sm leading-6 p-1.5 text-slate-400 bg-slate-800 resize-none outline-none rounded-md"
                     maxLength={50}
                     value={option}
-                    onChange={(event) => handleOptionChanged(index, event)}
+                    onChange={(event) => {
+                      const newOptions = [...options];
+                      newOptions[index] = event.target.value;
+                      setOptions(newOptions);
+                    }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => handleOptionRecognitionToggle(index)}
+                    className={`text-sm text-lime-400 font-medium hover:text-lime-300 ${
+                      optionIndexRecording === index ? "text-red-600" : ""
+                    }`}
+                  >
+                    {optionIndexRecording === index ? (
+                      <div className="size-4 rounded-full bg-red-500 animate-pulse" />
+                    ) : (
+                      <Mic size={16} />
+                    )}
+                  </button>
+
                   <button
                     className="text-red-600  hover:text-red-400"
                     type="button"
                     onClick={() => handleRemoveOption(index)}
                   >
-                    Remover
+                    <Trash size={16} />
                   </button>
                 </div>
               ))}
