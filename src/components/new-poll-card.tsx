@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, FormEvent } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Mic, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../services/api";
 
-const SpeechRecognitionAPI =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-
 interface NewPollProps {
   onPollCreated: (question: string, options: string[]) => void;
 }
+
+const SpeechRecognitionAPI =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
 export function NewPollCard({ onPollCreated }: NewPollProps) {
   const [question, setQuestion] = useState("");
@@ -20,14 +20,51 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
     null
   );
 
-  useEffect(() => {
-    return () => {
-      // Limpa a gravação quando o componente é desmontado
-      if (recognition !== null) {
-        recognition.stop();
-      }
-    };
-  }, [recognition]);
+  function handleAddOption() {
+    setOptions([...options, ""]);
+  }
+
+  function handleRemoveOption(index: number) {
+    // Verificar se a opção está sendo gravada
+    if (index === optionIndexRecording) {
+      // Exibir toast de aviso
+      toast.error(
+        "Não é possível excluir a opção enquanto estiver sendo gravada por voz."
+      );
+    } else {
+      // Remover a opção
+      const newOptions = [...options];
+      newOptions.splice(index, 1);
+      setOptions(newOptions);
+    }
+  }
+
+  function handleSavePoll(event: FormEvent) {
+    event.preventDefault();
+
+    if (question === "" || options.some((option) => option === "")) {
+      toast.error("Por favor, preencha todas as opções e a pergunta.");
+      return;
+    }
+
+    try {
+      onPollCreated(question, options);
+      setQuestion("");
+      setOptions(["", ""]);
+
+      api.post("polls", {
+        title: question,
+        options,
+      });
+
+      toast.success("Enquete criada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao criar a nota:", error);
+      toast.error(
+        "Erro ao criar a nota. Por favor, tente novamente mais tarde."
+      );
+    }
+  }
 
   const handleTitleRecognitionStart = () => {
     // Armazenar o valor atual do input
@@ -119,44 +156,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
       setRecognition(null);
       setOptionIndexRecording(-1);
     }
-  }
-
-  function handleAddOption() {
-    setOptions([...options, ""]);
-  }
-
-  function handleRemoveOption(index: number) {
-    // Verificar se a opção está sendo gravada
-    if (index === optionIndexRecording) {
-      // Exibir toast de aviso
-      toast.error(
-        "Não é possível excluir a opção enquanto estiver sendo gravada por voz."
-      );
-    } else {
-      // Remover a opção
-      const newOptions = [...options];
-      newOptions.splice(index, 1);
-      setOptions(newOptions);
-    }
-  }
-
-  function handleSavePoll() {
-    if (question === "" || options.some((option) => option === "")) {
-      toast.error("Por favor, preencha todas as opções e a pergunta.");
-      return;
-    }
-
-    onPollCreated(question, options);
-
-    setQuestion("");
-    setOptions(["", ""]);
-
-    api.post("polls", {
-      title: question,
-      options,
-    });
-
-    toast.success("Enquete criada com sucesso!");
   }
 
   return (

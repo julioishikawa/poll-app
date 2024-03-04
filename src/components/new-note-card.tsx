@@ -2,9 +2,10 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { api } from "../services/api";
 
 interface NewNoteProps {
-  onNoteCreated: (content: string) => void;
+  onNoteCreated: (text: string) => void;
 }
 
 const SpeechRecognitionAPI =
@@ -13,16 +14,16 @@ const SpeechRecognitionAPI =
 const speechRecognition = new SpeechRecognitionAPI();
 
 export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
+  const [text, setText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState(true);
-  const [content, setContent] = useState("");
 
   function handleStartEditor() {
     setShouldShowOnboarding(false);
   }
 
-  function handleContentChanged(event: ChangeEvent<HTMLTextAreaElement>) {
-    setContent(event.target.value);
+  function handleTextChanged(event: ChangeEvent<HTMLTextAreaElement>) {
+    setText(event.target.value);
 
     if (event.target.value === "") {
       setShouldShowOnboarding(true);
@@ -32,16 +33,23 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
   function handleSaveNote(event: FormEvent) {
     event.preventDefault();
 
-    if (content === "") {
+    if (text === "") {
       return;
     }
 
-    onNoteCreated(content);
+    try {
+      onNoteCreated(text);
+      setText("");
+      setShouldShowOnboarding(true);
 
-    setContent("");
-    setShouldShowOnboarding(true);
-
-    toast.success("Nota criada com sucesso!");
+      api.post("notes", { text: text });
+      toast.success("Nota criada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao criar a nota:", error);
+      toast.error(
+        "Erro ao criar a nota. Por favor, tente novamente mais tarde."
+      );
+    }
   }
 
   function handleStartRecording() {
@@ -66,7 +74,7 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
         return text.concat(result[0].transcript);
       }, "");
 
-      setContent(transcription);
+      setText(transcription);
     };
 
     speechRecognition.onerror = (event) => {
@@ -85,7 +93,7 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
   }
 
   return (
-    <Dialog.Root>
+    <Dialog.Root onOpenChange={(open) => !open && handleStopRecording()}>
       <Dialog.Trigger className="rounded-md flex flex-col gap-3 text-left bg-slate-700 p-5 hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <span className="text-sm font-medium text-slate-200">
           Adicionar nota
@@ -134,8 +142,8 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
                 <textarea
                   autoFocus
                   className="text-sm leading-6 text-slate-400 bg-transparent resize-none flex-1 outline-none"
-                  onChange={handleContentChanged}
-                  value={content}
+                  onChange={handleTextChanged}
+                  value={text}
                 />
               )}
             </div>

@@ -24,7 +24,6 @@ const SpeechRecognitionAPI =
 
 export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string>("");
-  const [pollCreationDistance, setPollCreationDistance] = useState<string>("");
   const [voteSubmitted, setVoteSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [previousVotedOptionId, setPreviousVotedOptionId] =
@@ -126,27 +125,6 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
   }
 
   useEffect(() => {
-    async function fetchPollDistanceById() {
-      try {
-        const response = await api.get(`/polls/${poll.id}`);
-        const pollData = response.data.poll;
-
-        if (pollData.date) {
-          const distance = formatDistanceToNow(new Date(pollData.date), {
-            locale: ptBR,
-            addSuffix: true,
-          });
-          setPollCreationDistance(distance);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar a enquete:", error);
-      }
-    }
-
-    fetchPollDistanceById();
-  }, [poll.id]);
-
-  useEffect(() => {
     const cleanup = () => {
       if (isRecording && speechRecognition !== null) {
         speechRecognition.abort();
@@ -160,7 +138,10 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
     <Dialog.Root onOpenChange={(open) => !open && handleStopRecording()}>
       <Dialog.Trigger className="rounded-md bg-slate-800 flex flex-col p-5 gap-3 overflow-hidden relative hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <span className="text-sm font-medium text-slate-300">
-          {pollCreationDistance}
+          {formatDistanceToNow(poll.created_at, {
+            locale: ptBR,
+            addSuffix: true,
+          })}
         </span>
 
         <div className="max-w-[270px]">
@@ -195,11 +176,12 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
           </Dialog.Close>
 
           <div className="flex flex-1 flex-col gap-4 p-5">
-            {pollCreationDistance && (
-              <span className="text-sm font-medium text-slate-300">
-                {pollCreationDistance}
-              </span>
-            )}
+            <span className="text-sm font-medium text-slate-300">
+              {formatDistanceToNow(poll.created_at, {
+                locale: ptBR,
+                addSuffix: true,
+              })}
+            </span>
 
             <div className="max-w-[500px]">
               <h1 className="text-xl font-bold leading-6 text-slate-300 break-words">

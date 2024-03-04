@@ -9,8 +9,8 @@ import { PollCardResults } from "./components/poll-card-results";
 
 interface Note {
   id: string;
-  date: Date;
-  content: string;
+  created_at: Date;
+  text: string;
 }
 
 interface Poll {
@@ -26,53 +26,64 @@ interface Poll {
 
 export function App() {
   const [search, setSearch] = useState("");
+  const [notes, setNotes] = useState<Note[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [votedPolls, setVotedPolls] = useState<string[]>([]);
-
   const [pollResultsVisible, setPollResultsVisible] = useState<{
     [key: string]: boolean;
   }>({});
-  const [notes, setNotes] = useState<Note[]>(() => {
-    const notesOnStorage = localStorage.getItem("notes");
-
-    if (notesOnStorage) {
-      return JSON.parse(notesOnStorage);
-    }
-
-    return [];
-  });
-
   const filteredNotes =
     search !== ""
       ? notes.filter((note) =>
-          note.content.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+          note.text.toLocaleLowerCase().includes(search.toLocaleLowerCase())
         )
       : notes;
 
-  function onNoteCreated(content: string) {
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      date: new Date(),
-      content,
-    };
-
-    const updatedNotes = [newNote, ...notes];
-
-    setNotes(updatedNotes);
-
-    localStorage.setItem("notes", JSON.stringify(updatedNotes));
-  }
-
-  function onNoteDeleted(id: string) {
-    const updatedNotes = notes.filter((note) => note.id !== id);
-
-    setNotes(updatedNotes);
-
-    localStorage.setItem("notes", JSON.stringify(updatedNotes));
-  }
-
   function handleSearch(event: ChangeEvent<HTMLInputElement>) {
     setSearch(event.target.value);
+  }
+
+  async function fetchNotes() {
+    try {
+      const res = await api.get("/notes");
+      const notesData: Note[] = res.data;
+
+      notesData.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setNotes(notesData);
+    } catch (e) {
+      console.error("Error fetching notes:", e);
+    }
+  }
+
+  async function fetchPolls() {
+    try {
+      const res = await api.get("/polls");
+      const pollsData: Poll[] = res.data;
+
+      pollsData.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setPolls(pollsData);
+    } catch (e) {
+      console.error("Erro ao buscar as enquetes:", e);
+    }
+  }
+
+  function handleNoteCreated(text: string) {
+    const newNote: Note = {
+      id: crypto.randomUUID(),
+      created_at: new Date(),
+      text,
+    };
+
+    setNotes((prevNotes) => [newNote, ...prevNotes]);
+    setTimeout(fetchNotes, 100);
   }
 
   function handlePollCreated(title: string, options: string[]) {
@@ -88,7 +99,7 @@ export function App() {
     };
 
     setPolls((prevPolls) => [newPoll, ...prevPolls]);
-    window.location.reload();
+    setTimeout(fetchPolls, 100);
   }
 
   function handleVoteSubmitted(pollId: string) {
@@ -102,36 +113,41 @@ export function App() {
     setPollResultsVisible({ ...pollResultsVisible, [pollId]: false });
   }
 
-  async function fetchPolls() {
-    try {
-      const response = await api.get("/polls");
-      const pollsData: Poll[] = response.data;
-
-      pollsData.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setPolls(pollsData);
-
-      const votedPollsFromStorage = localStorage.getItem("votedPolls");
-      if (votedPollsFromStorage) {
-        const votedPolls: string[] = JSON.parse(votedPollsFromStorage);
-        setVotedPolls(votedPolls);
-
-        const updatedPollResultsVisible = { ...pollResultsVisible };
-        votedPolls.forEach((votedPollId) => {
-          updatedPollResultsVisible[votedPollId] = true; // Define como verdadeiro para todas as enquetes votadas
-        });
-        setPollResultsVisible(updatedPollResultsVisible);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar enquetes:", error);
-    }
-  }
+  useEffect(() => {
+    fetchNotes();
+    fetchPolls();
+  }, []);
 
   useEffect(() => {
-    fetchPolls();
+    async function fetchVotedPolls() {
+      try {
+        const res = await api.get("/polls");
+        const pollsData: Poll[] = res.data;
+
+        pollsData.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        setPolls(pollsData);
+
+        const votedPollsFromStorage = localStorage.getItem("votedPolls");
+        if (votedPollsFromStorage) {
+          const votedPolls: string[] = JSON.parse(votedPollsFromStorage);
+          setVotedPolls(votedPolls);
+
+          const updatedPollResultsVisible = { ...pollResultsVisible };
+          votedPolls.forEach((votedPollId) => {
+            updatedPollResultsVisible[votedPollId] = true;
+          });
+          setPollResultsVisible(updatedPollResultsVisible);
+        }
+      } catch (e) {
+        console.error("Erro ao buscar as enquetes:", e);
+      }
+    }
+
+    fetchVotedPolls();
   }, []);
 
   return (
@@ -150,10 +166,10 @@ export function App() {
       <div className="h-px bg-slate-700" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[250px]">
-        <NewNoteCard onNoteCreated={onNoteCreated} />
+        <NewNoteCard onNoteCreated={handleNoteCreated} />
 
         {filteredNotes.map((note) => (
-          <NoteCard key={note.id} note={note} onNoteDeleted={onNoteDeleted} />
+          <NoteCard key={note.id} note={note} />
         ))}
       </div>
 

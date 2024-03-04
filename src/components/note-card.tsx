@@ -2,22 +2,58 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { X } from "lucide-react";
+import { api } from "../services/api";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface NoteCardProps {
   note: {
     id: string;
-    date: Date;
-    content: string;
+    created_at: Date;
+    text: string;
   };
-  onNoteDeleted: (id: string) => void;
 }
 
-export function NoteCard({ note, onNoteDeleted }: NoteCardProps) {
+export function NoteCard({ note }: NoteCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState(note.text);
+
+  async function handleUpdate() {
+    try {
+      await api.put(`/notes/${note.id}`, { text: editedText });
+      toast.success("Nota editada com sucesso.");
+      setIsEditing(false);
+    } catch (error) {
+      toast.error("Ocorreu um erro ao editar a nota.");
+    }
+  }
+
+  async function handleDelete() {
+    const confirmDelete = window.confirm(
+      "Tem certeza que deseja deletar esta nota?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await api.delete(`/notes/${note.id}`);
+      toast.success("Nota deletada com sucesso.");
+    } catch (error) {
+      toast.error("Ocorreu um erro ao deletar a nota.");
+    }
+  }
+
+  function handleCloseNote() {
+    setIsEditing(false);
+  }
+
   return (
-    <Dialog.Root>
+    <Dialog.Root onOpenChange={handleCloseNote}>
       <Dialog.Trigger className="rounded-md text-left bg-slate-800 flex flex-col p-5 gap-3 overflow-hidden relative hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <span className="text-sm font-medium text-slate-300">
-          {formatDistanceToNow(note.date, {
+          {formatDistanceToNow(note.created_at, {
             locale: ptBR,
             addSuffix: true,
           })}
@@ -33,7 +69,7 @@ export function NoteCard({ note, onNoteDeleted }: NoteCardProps) {
             wordWrap: "break-word",
           }}
         >
-          {note.content}
+          {note.text}
         </p>
 
         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-black/0 pointer-events-none" />
@@ -46,31 +82,59 @@ export function NoteCard({ note, onNoteDeleted }: NoteCardProps) {
             <X className="size-5" />
           </Dialog.Close>
 
-          <div className="flex flex-1 flex-col gap-3 p-5">
+          <div className="flex flex-1 flex-col gap-3 py-5 pl-5 pr-3">
             <span className="text-sm font-medium text-slate-300">
-              {formatDistanceToNow(note.date, {
+              {formatDistanceToNow(note.created_at, {
                 locale: ptBR,
                 addSuffix: true,
               })}
             </span>
 
-            <p
-              className="text-sm leading-6 text-slate-400"
-              style={{
-                maxWidth: "600px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "pre-wrap",
-                wordWrap: "break-word",
-              }}
-            >
-              {note.content}
-            </p>
+            {isEditing ? (
+              <textarea
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+                className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent"
+              />
+            ) : (
+              <textarea className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
+                {note.text}
+              </textarea>
+            )}
           </div>
+
+          {!isEditing && (
+            <button
+              type="button"
+              className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
+              onClick={() => setIsEditing(true)}
+            >
+              Editar nota
+            </button>
+          )}
+
+          {isEditing && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                className="w-full bg-lime-400 py-3 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
+                onClick={handleUpdate}
+              >
+                Salvar
+              </button>
+              <button
+                type="button"
+                className="w-full bg-red-500 py-3 text-center text-sm text-red-100 outline-none font-medium hover:bg-red-600"
+                onClick={() => setIsEditing(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
 
           <button
             type="button"
-            onClick={() => onNoteDeleted(note.id)}
+            onClick={handleDelete}
             className="w-full bg-slate-800 py-4 text-center text-sm text-slate-300 outline-none font-medium group"
           >
             Deseja{" "}

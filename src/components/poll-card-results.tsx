@@ -24,7 +24,6 @@ interface PollResultsProps {
 
 export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
   const [pollData, setPollData] = useState<any>(null);
-  const [pollCreationDistance, setPollCreationDistance] = useState<string>("");
 
   async function handleDelete() {
     const confirmDelete = window.confirm(
@@ -37,7 +36,6 @@ export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
 
     await api.delete(`/polls/${poll.id}`);
     toast.success("Enquete deletada com sucesso.");
-    window.location.reload();
   }
 
   function handleChangeVote(pollId: string) {
@@ -54,14 +52,7 @@ export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
         const response = await api.get(`/polls/${poll.id}`);
         const { poll: fetchedPollData } = response.data;
 
-        if (fetchedPollData.date) {
-          const distance = formatDistanceToNow(new Date(fetchedPollData.date), {
-            locale: ptBR,
-            addSuffix: true,
-          });
-          setPollCreationDistance(distance);
-          setPollData(fetchedPollData);
-        }
+        setPollData(fetchedPollData);
       } catch (error) {
         console.error("Erro ao buscar a enquete:", error);
       }
@@ -75,7 +66,10 @@ export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
       <Dialog.Root>
         <Dialog.Trigger className="w-full h-full rounded-md bg-slate-800 flex flex-col p-5 gap-3 overflow-hidden relative hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
           <span className="text-sm font-medium text-slate-300">
-            {pollCreationDistance}
+            {formatDistanceToNow(poll.created_at, {
+              locale: ptBR,
+              addSuffix: true,
+            })}
           </span>
 
           <div className="max-w-[270px]">
@@ -117,11 +111,12 @@ export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
             </Dialog.Close>
 
             <div className="flex flex-1 flex-col gap-4 p-5">
-              {pollCreationDistance && (
-                <span className="text-sm font-medium text-slate-300">
-                  {pollCreationDistance}
-                </span>
-              )}
+              <span className="text-sm font-medium text-slate-300">
+                {formatDistanceToNow(poll.created_at, {
+                  locale: ptBR,
+                  addSuffix: true,
+                })}
+              </span>
 
               <div>
                 <h1 className="text-xl font-bold leading-6 text-slate-300 break-words">
