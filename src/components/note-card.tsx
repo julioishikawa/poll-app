@@ -12,9 +12,11 @@ interface NoteCardProps {
     created_at: Date;
     text: string;
   };
+  onDelete: (noteId: string) => void;
+  onUpdate: () => void;
 }
 
-export function NoteCard({ note }: NoteCardProps) {
+export function NoteCard({ note, onDelete, onUpdate }: NoteCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(note.text);
 
@@ -23,6 +25,7 @@ export function NoteCard({ note }: NoteCardProps) {
       await api.put(`/notes/${note.id}`, { text: editedText });
       toast.success("Nota editada com sucesso.");
       setIsEditing(false);
+      onUpdate();
     } catch (error) {
       toast.error("Ocorreu um erro ao editar a nota.");
     }
@@ -40,6 +43,7 @@ export function NoteCard({ note }: NoteCardProps) {
     try {
       await api.delete(`/notes/${note.id}`);
       toast.success("Nota deletada com sucesso.");
+      onDelete(note.id);
     } catch (error) {
       toast.error("Ocorreu um erro ao deletar a nota.");
     }
@@ -97,9 +101,9 @@ export function NoteCard({ note }: NoteCardProps) {
                 className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent"
               />
             ) : (
-              <textarea className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
+              <p className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
                 {note.text}
-              </textarea>
+              </p>
             )}
           </div>
 

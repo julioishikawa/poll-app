@@ -1,3 +1,5 @@
+// new-note-card.tsx
+
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -17,10 +19,7 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
   const [text, setText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState(true);
-
-  function handleStartEditor() {
-    setShouldShowOnboarding(false);
-  }
+  const [isOpen, setIsOpen] = useState(false);
 
   function handleTextChanged(event: ChangeEvent<HTMLTextAreaElement>) {
     setText(event.target.value);
@@ -41,6 +40,7 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
       onNoteCreated(text);
       setText("");
       setShouldShowOnboarding(true);
+      setIsOpen(false);
 
       api.post("notes", { text: text });
       toast.success("Nota criada com sucesso!");
@@ -63,6 +63,7 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
 
     setIsRecording(true);
     setShouldShowOnboarding(false);
+    setIsOpen(true);
 
     speechRecognition.lang = "pt-BR";
     speechRecognition.continuous = true;
@@ -92,8 +93,13 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
     }
   }
 
+  function handleStartEditor() {
+    setShouldShowOnboarding(false);
+    setIsOpen(true);
+  }
+
   return (
-    <Dialog.Root onOpenChange={(open) => !open && handleStopRecording()}>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
       <Dialog.Trigger className="rounded-md flex flex-col gap-3 text-left bg-slate-700 p-5 hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <span className="text-sm font-medium text-slate-200">
           Adicionar nota

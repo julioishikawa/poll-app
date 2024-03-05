@@ -20,9 +20,14 @@ interface PollResultsProps {
     options: PollOption[];
   };
   onChangeVote: (pollId: string) => void;
+  onDelete: (pollId: string) => void;
 }
 
-export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
+export function PollCardResults({
+  poll,
+  onChangeVote,
+  onDelete,
+}: PollResultsProps) {
   const [pollData, setPollData] = useState<any>(null);
 
   async function handleDelete() {
@@ -36,6 +41,7 @@ export function PollCardResults({ poll, onChangeVote }: PollResultsProps) {
 
     await api.delete(`/polls/${poll.id}`);
     toast.success("Enquete deletada com sucesso.");
+    onDelete(poll.id);
   }
 
   function handleChangeVote(pollId: string) {

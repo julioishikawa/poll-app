@@ -19,6 +19,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(
     null
   );
+  const [isOpen, setIsOpen] = useState(false);
 
   function handleAddOption() {
     setOptions([...options, ""]);
@@ -27,7 +28,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
   function handleRemoveOption(index: number) {
     // Verificar se a opção está sendo gravada
     if (index === optionIndexRecording) {
-      // Exibir toast de aviso
       toast.error(
         "Não é possível excluir a opção enquanto estiver sendo gravada por voz."
       );
@@ -58,6 +58,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
       });
 
       toast.success("Enquete criada com sucesso!");
+      handleCloseDialog();
     } catch (error) {
       console.error("Erro ao criar a nota:", error);
       toast.error(
@@ -149,17 +150,28 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
   };
 
   function handleStopRecording() {
-    setIsRecordingTitle(false);
-
-    if (recognition) {
+    if (recognition && recognition.continuous) {
+      setIsRecordingTitle(false);
       recognition.stop();
       setRecognition(null);
       setOptionIndexRecording(-1);
     }
   }
 
+  function handleCloseDialog() {
+    setIsOpen(false);
+  }
+
   return (
-    <Dialog.Root onOpenChange={(open) => !open && handleStopRecording()}>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          handleStopRecording();
+        }
+      }}
+    >
       <Dialog.Trigger className="rounded-md flex flex-col gap-3 text-left bg-slate-700 p-5 hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
         <button className="text-sm font-medium text-slate-200">
           Adicionar enquete

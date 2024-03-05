@@ -1,3 +1,5 @@
+// app.tsx
+
 import { useEffect, useState, ChangeEvent } from "react";
 import logo from "./assets/logo-nlw-expert.svg";
 import { api } from "./services/api";
@@ -86,6 +88,10 @@ export function App() {
     setTimeout(fetchNotes, 100);
   }
 
+  function handleRemoveNote(noteId: string) {
+    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+  }
+
   function handlePollCreated(title: string, options: string[]) {
     const newPoll: Poll = {
       id: crypto.randomUUID(),
@@ -100,6 +106,10 @@ export function App() {
 
     setPolls((prevPolls) => [newPoll, ...prevPolls]);
     setTimeout(fetchPolls, 100);
+  }
+
+  function handleRemovePoll(pollId: string) {
+    setPolls((prevPolls) => prevPolls.filter((poll) => poll.id !== pollId));
   }
 
   function handleVoteSubmitted(pollId: string) {
@@ -169,7 +179,12 @@ export function App() {
         <NewNoteCard onNoteCreated={handleNoteCreated} />
 
         {filteredNotes.map((note) => (
-          <NoteCard key={note.id} note={note} />
+          <NoteCard
+            key={note.id}
+            note={note}
+            onUpdate={fetchNotes}
+            onDelete={handleRemoveNote}
+          />
         ))}
       </div>
 
@@ -183,10 +198,11 @@ export function App() {
             className="grid grid-cols-1 gap-6 auto-rows-[250px]"
             key={poll.id}
           >
-            {pollResultsVisible[poll.id] ? ( // Verifica se os resultados devem ser visíveis para esta enquete
+            {pollResultsVisible[poll.id] ? (
               <PollCardResults
                 poll={poll}
                 onChangeVote={() => handleChangeVote(poll.id)}
+                onDelete={handleRemovePoll}
               />
             ) : (
               <PollCard
