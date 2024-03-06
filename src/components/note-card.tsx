@@ -101,7 +101,7 @@ export function NoteCard({ note, onDelete, onUpdate }: NoteCardProps) {
                 className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent"
               />
             ) : (
-              <p className="w-full h-full text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
+              <p className="w-full max-h-[375px] text-sm leading-6 text-slate-400 bg-transparent outline-none resize-none pr-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
                 {note.text}
               </p>
             )}

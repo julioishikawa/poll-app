@@ -1,5 +1,3 @@
-// app.tsx
-
 import { useEffect, useState, ChangeEvent } from "react";
 import logo from "./assets/logo-nlw-expert.svg";
 import { api } from "./services/api";

@@ -130,8 +130,8 @@ export function PollCardResults({
                 </h1>
               </div>
 
-              <div>
-                <ul className="flex flex-col gap-3">
+              <div className="max-h-[340px] overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
+                <ul className="flex flex-col gap-3 pr-2">
                   {pollData &&
                     pollData.options &&
                     pollData.options.map(
@@ -154,21 +154,21 @@ export function PollCardResults({
                         </li>
                       )
                     )}
-                  <div className="flex justify-between mt-4">
-                    <button
-                      className="px-4 py-2 bg-lime-500 text-lime-100 font-medium rounded hover:bg-lime-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lime-500"
-                      onClick={() => handleChangeVote(poll.id)}
-                    >
-                      Trocar Voto
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-red-500 text-red-100 font-medium rounded hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
-                      onClick={handleDelete}
-                    >
-                      Deletar Enquete
-                    </button>
-                  </div>
                 </ul>
+              </div>
+              <div className="flex justify-between">
+                <button
+                  className="px-4 py-2 bg-lime-500 text-lime-100 font-medium rounded hover:bg-lime-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lime-500"
+                  onClick={() => handleChangeVote(poll.id)}
+                >
+                  Trocar Voto
+                </button>
+                <button
+                  className="px-4 py-2 bg-red-500 text-red-100 font-medium rounded hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+                  onClick={handleDelete}
+                >
+                  Deletar Enquete
+                </button>
               </div>
             </div>
           </Dialog.Content>
