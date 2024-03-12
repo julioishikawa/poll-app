@@ -39,6 +39,13 @@ export function App() {
         )
       : notes;
 
+  const filteredPolls =
+    search !== ""
+      ? polls.filter((poll) =>
+          poll.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+        )
+      : polls;
+
   function handleSearch(event: ChangeEvent<HTMLInputElement>) {
     setSearch(event.target.value);
   }
@@ -191,7 +198,7 @@ export function App() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[250px]">
         <NewPollCard onPollCreated={handlePollCreated} />
 
-        {polls.map((poll) => (
+        {filteredPolls.map((poll) => (
           <div
             className="grid grid-cols-1 gap-6 auto-rows-[250px]"
             key={poll.id}
