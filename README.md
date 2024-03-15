@@ -53,11 +53,9 @@ $ npm run dev
 
 ## IMPORTANTE
 
-Para fazer os testes da aplicação no seu computador você vai precisar baixar a [API](https://github.com/shuharib0t/poll-app-api) do poll-app e também fazer uma simples configuração no front-end:
+Para fazer os testes da aplicação no seu computador você vai precisar baixar a [API](https://github.com/shuharib0t/poll-app-api) do poll-app
 
 ## Observações
-
-Estou hospedando o servidor utilizando o plano gratuito então pode ter alguns 'bugs' de funcionalidades. Vou utilizar como exemplo a criação de notas/enquetes, apesar de eu colocar um timeout de 1s para chamar a nova nota/enquete que o usuário criou, o servidor pode acabar tendo um pico de lag e não vai aparecer a nota/enquete que o usuário criou, então nesse caso o usuário vai precisar dar um F5(Atualizar a página) para que a sua nota/enquete apareça. Lembrando que isso é totalmente culpa do servidor gratuito e não da aplicação.
 
 Tenha paciência, as vezes a IA de reconhecimento de fala não detecta o que você diz perfeitamente, você pode corrigir isso repetindo a palavra/frase que você deseja novamente, recomendo você verificar a configuração do seu microfone antes de utilizar esse método.
 
