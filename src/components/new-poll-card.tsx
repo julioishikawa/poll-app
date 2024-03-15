@@ -173,7 +173,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
       }}
     >
       <Dialog.Trigger className="rounded-md flex flex-col gap-3 text-left bg-slate-700 p-5 hover:ring-2 hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400 outline-none">
-        <button className="text-sm font-medium text-slate-200">
+        <button type="button" className="text-sm font-medium text-slate-200">
           Adicionar enquete
         </button>
 
@@ -202,6 +202,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                   readOnly={isRecordingTitle}
                 />
                 <button
+                  type="button"
                   onClick={handleTitleRecognitionToggle}
                   className={`text-sm text-lime-400 font-medium hover:text-lime-300 ${
                     isRecordingTitle ? "text-red-600" : ""
@@ -232,6 +233,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                     }}
                   />
                   <button
+                    type="button"
                     onClick={() => handleOptionRecognitionToggle(index)}
                     className={`text-sm text-lime-400 font-medium hover:text-lime-300 ${
                       optionIndexRecording === index ? "text-red-600" : ""
@@ -245,6 +247,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                   </button>
 
                   <button
+                    type="button"
                     className="text-red-600  hover:text-red-400"
                     onClick={() => handleRemoveOption(index)}
                   >
@@ -253,6 +256,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                 </div>
               ))}
               <button
+                type="button"
                 className="mb-5 mx-auto"
                 style={{ width: "130px" }}
                 onClick={handleAddOption}
@@ -262,6 +266,7 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
             </div>
 
             <button
+              type="button"
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
               onClick={handleSavePoll}
             >

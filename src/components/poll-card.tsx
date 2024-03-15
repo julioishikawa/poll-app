@@ -153,6 +153,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
         {poll.options &&
           poll.options.map((option) => (
             <button
+              type="button"
               key={option.id}
               className={`min-h-5 max-w-full text-left text-sm text-slate-400 hover:underline truncate ${
                 selectedOptionId === option.id ? "font-bold" : ""
@@ -218,6 +219,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
 
           {isRecording ? (
             <button
+              type="button"
               onClick={handleStopRecording}
               className="w-full flex items-center justify-center gap-2 bg-slate-900 py-4 text-center text-sm text-slate-300 outline-none font-medium hover:text-slate-100"
             >
@@ -226,6 +228,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleStartRecording}
               className="w-full py-4 bg-slate-800 text-center text-sm outline-none font-medium hover:text-lime-500"
             >
@@ -235,6 +238,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
 
           {isSubmitting ? (
             <button
+              type="button"
               disabled
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500 cursor-not-allowed"
             >
@@ -242,6 +246,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleVoteSubmit}
               disabled={voteSubmitted}
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
