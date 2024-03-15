@@ -191,7 +191,7 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
 
             <div>
               <h2 className="mb-3">Opções</h2>
-              <div className="max-h-[340px] flex flex-1 flex-col pr-2 gap-3 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
+              <div className="max-h-[340px] flex flex-1 flex-col pr-2 mb-5 gap-3 overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
                 {poll.options &&
                   poll.options.map((option) => (
                     <div
@@ -218,7 +218,6 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
 
           {isRecording ? (
             <button
-              type="button"
               onClick={handleStopRecording}
               className="w-full flex items-center justify-center gap-2 bg-slate-900 py-4 text-center text-sm text-slate-300 outline-none font-medium hover:text-slate-100"
             >
@@ -227,9 +226,8 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
             </button>
           ) : (
             <button
-              type="button"
               onClick={handleStartRecording}
-              className="w-full  py-4 text-center text-sm  outline-none font-medium hover:text-lime-500"
+              className="w-full py-4 bg-slate-800 text-center text-sm outline-none font-medium hover:text-lime-500"
             >
               Iniciar gravação de voz para marcar opção
             </button>
@@ -237,7 +235,6 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
 
           {isSubmitting ? (
             <button
-              type="button"
               disabled
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500 cursor-not-allowed"
             >
@@ -245,7 +242,6 @@ export function PollCard({ poll, onVoteSubmitted }: PollCardProps) {
             </button>
           ) : (
             <button
-              type="button"
               onClick={handleVoteSubmit}
               disabled={voteSubmitted}
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"

@@ -202,7 +202,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                   readOnly={isRecordingTitle}
                 />
                 <button
-                  type="button"
                   onClick={handleTitleRecognitionToggle}
                   className={`text-sm text-lime-400 font-medium hover:text-lime-300 ${
                     isRecordingTitle ? "text-red-600" : ""
@@ -233,7 +232,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                     }}
                   />
                   <button
-                    type="button"
                     onClick={() => handleOptionRecognitionToggle(index)}
                     className={`text-sm text-lime-400 font-medium hover:text-lime-300 ${
                       optionIndexRecording === index ? "text-red-600" : ""
@@ -248,7 +246,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
 
                   <button
                     className="text-red-600  hover:text-red-400"
-                    type="button"
                     onClick={() => handleRemoveOption(index)}
                   >
                     <Trash size={16} />
@@ -256,7 +253,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
                 </div>
               ))}
               <button
-                type="button"
                 className="mb-5 mx-auto"
                 style={{ width: "130px" }}
                 onClick={handleAddOption}
@@ -266,7 +262,6 @@ export function NewPollCard({ onPollCreated }: NewPollProps) {
             </div>
 
             <button
-              type="button"
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
               onClick={handleSavePoll}
             >

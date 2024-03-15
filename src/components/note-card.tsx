@@ -109,7 +109,6 @@ export function NoteCard({ note, onDelete, onUpdate }: NoteCardProps) {
 
           {!isEditing && (
             <button
-              type="button"
               className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
               onClick={() => setIsEditing(true)}
             >
@@ -120,14 +119,12 @@ export function NoteCard({ note, onDelete, onUpdate }: NoteCardProps) {
           {isEditing && (
             <div className="flex justify-center">
               <button
-                type="button"
                 className="w-full bg-lime-400 py-3 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
                 onClick={handleUpdate}
               >
                 Salvar
               </button>
               <button
-                type="button"
                 className="w-full bg-red-500 py-3 text-center text-sm text-red-100 outline-none font-medium hover:bg-red-600"
                 onClick={() => setIsEditing(false)}
               >
@@ -137,7 +134,6 @@ export function NoteCard({ note, onDelete, onUpdate }: NoteCardProps) {
           )}
 
           <button
-            type="button"
             onClick={handleDelete}
             className="w-full bg-slate-800 py-4 text-center text-sm text-slate-300 outline-none font-medium group"
           >

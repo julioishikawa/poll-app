@@ -158,13 +158,13 @@ export function PollCardResults({
               </div>
               <div className="flex justify-between">
                 <button
-                  className="px-4 py-2 bg-lime-500 text-lime-100 font-medium rounded hover:bg-lime-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lime-500"
+                  className="px-4 py-2 bg-lime-500 text-white font-medium rounded hover:bg-lime-600"
                   onClick={() => handleChangeVote(poll.id)}
                 >
                   Trocar Voto
                 </button>
                 <button
-                  className="px-4 py-2 bg-red-500 text-red-100 font-medium rounded hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+                  className="px-4 py-2 bg-red-500 text-whitefont-medium rounded hover:bg-red-600"
                   onClick={handleDelete}
                 >
                   Deletar Enquete

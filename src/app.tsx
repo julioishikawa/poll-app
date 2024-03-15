@@ -82,35 +82,16 @@ export function App() {
     }
   }
 
-  function handleNoteCreated(text: string) {
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      created_at: new Date(),
-      text,
-    };
-
-    setNotes((prevNotes) => [newNote, ...prevNotes]);
-    setTimeout(fetchNotes, 100);
+  function handleNoteCreated() {
+    setTimeout(fetchNotes, 1000);
   }
 
   function handleRemoveNote(noteId: string) {
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   }
 
-  function handlePollCreated(title: string, options: string[]) {
-    const newPoll: Poll = {
-      id: crypto.randomUUID(),
-      created_at: new Date(),
-      title,
-      options: options.map((option, index) => ({
-        id: index.toString(),
-        title: option,
-        score: 0,
-      })),
-    };
-
-    setPolls((prevPolls) => [newPoll, ...prevPolls]);
-    setTimeout(fetchPolls, 100);
+  function handlePollCreated() {
+    setTimeout(fetchPolls, 1000);
   }
 
   function handleRemovePoll(pollId: string) {

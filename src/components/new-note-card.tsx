@@ -126,7 +126,6 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
                 <p className="text-sm leading-6 text-slate-400">
                   Comece{" "}
                   <button
-                    type="button"
                     onClick={handleStartRecording}
                     className="font-medium text-lime-400 hover:underline"
                   >
@@ -134,7 +133,6 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
                   </button>{" "}
                   em áudio ou se preferir{" "}
                   <button
-                    type="button"
                     onClick={handleStartEditor}
                     className="font-medium text-lime-400 hover:underline"
                   >
@@ -154,7 +152,6 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
 
             {isRecording ? (
               <button
-                type="button"
                 onClick={handleStopRecording}
                 className="w-full flex items-center justify-center gap-2 bg-slate-900 py-4 text-center text-sm text-slate-300 outline-none font-medium hover:text-slate-100"
               >
@@ -163,7 +160,6 @@ export function NewNoteCard({ onNoteCreated }: NewNoteProps) {
               </button>
             ) : (
               <button
-                type="button"
                 onClick={handleSaveNote}
                 className="w-full bg-lime-400 py-4 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
               >
