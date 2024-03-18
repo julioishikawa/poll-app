@@ -1,6 +1,7 @@
 # Poll-app
 
 O Poll-app é uma aplicação feita para você fazer suas anotações, você também pode criar e fazer votos em uma enquete sem precisar de login!
+Esse projeto é uma 'fusão' entre duas trilhas(Nodejs/Reactjs) do NLW-Expert que aconteceu entre os dias 05 a 08 de fevereiro de 2024.
 
 ## Funcionalidades 🔧
 
