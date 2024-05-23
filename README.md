@@ -60,4 +60,4 @@ Para fazer os testes da aplicação no seu computador você vai precisar baixar 
 
 Tenha paciência, as vezes a IA de reconhecimento de fala não detecta o que você diz perfeitamente, você pode corrigir isso repetindo a palavra/frase que você deseja novamente, recomendo você verificar a configuração do seu microfone antes de utilizar esse método.
 
-Feito por [shuharib0t](https://www.linkedin.com/in/julio-ishikawa-449417213/) 👋.
+Feito por [Julio Ishikawa](https://www.linkedin.com/in/julio-ishikawa-449417213/) 👋.
