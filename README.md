@@ -54,7 +54,7 @@ $ npm run dev
 
 ## IMPORTANTE
 
-Para fazer os testes da aplicação no seu computador você vai precisar baixar a [API](https://github.com/shuharib0t/poll-app-api) do poll-app
+Para fazer os testes da aplicação no seu computador você vai precisar baixar a [API](https://github.com/julioishikawa/poll-app-api) do poll-app
 
 ## Observações
 
