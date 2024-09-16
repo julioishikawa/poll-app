@@ -39,7 +39,7 @@ Dentro da pasta que você criou, você vai abrir o seu prompt de comando e escol
 ```
 // Método HTTPS
 
-$ git clone https://github.com/shuharib0t/poll-app.git
+$ git clone https://github.com/julioishikawa/poll-app.git
 $ npm install
 $ npm run dev
 
@@ -47,7 +47,7 @@ ou
 
 // Método SSH
 
-$ git clone git@github.com:shuharib0t/poll-app.git
+$ git clone git@github.com:julioishikawa/poll-app.git
 $ npm install
 $ npm run dev
 ```
@@ -60,4 +60,4 @@ Para fazer os testes da aplicação no seu computador você vai precisar baixar 
 
 Tenha paciência, as vezes a IA de reconhecimento de fala não detecta o que você diz perfeitamente, você pode corrigir isso repetindo a palavra/frase que você deseja novamente, recomendo você verificar a configuração do seu microfone antes de utilizar esse método.
 
-Feito por [Julio Ishikawa](https://www.linkedin.com/in/julio-ishikawa-449417213/) 👋.
+Feito por [Julio Ishikawa](https://www.linkedin.com/in/julio-ishikawa) 👋.
